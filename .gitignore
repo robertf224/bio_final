@@ -3,3 +3,4 @@
 **/*.pickle
 **/*.aln
 **/*.txt
+**/.DS_Store
