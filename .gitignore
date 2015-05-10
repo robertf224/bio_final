@@ -4,3 +4,4 @@
 **/*.aln
 **/*.txt
 **/.DS_Store
+**/*.pyc

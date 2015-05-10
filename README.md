@@ -29,4 +29,4 @@ kmer spectra are stored as pickle files in the pickles folder.
 
 ## Computation
 
-TBD
+Preliminary models in test_compute.py
