@@ -1,6 +1,7 @@
 from pybloom import ScalableBloomFilter
 from collections import deque
 import random, sys, os, cPickle
+import numpy as np
 
 class kmer_store:
 	def __init__(self):
@@ -70,15 +71,6 @@ def normalize_counts(counts):
 	total = sum(counts)
 	return map(lambda x: x / float(total), counts)
 
-def memoize(f):
-    memo = {}
-    def helper(*args):
-        if args not in memo:            
-            memo[args] = f(*args)
-        return memo[args]
-    return helper
-
-@memoize
 def reads_loglikelihoods_base(sample_name, k, cutoff):
 	sample_filename = 'samples/%s.txt' % sample_name
 
@@ -110,15 +102,22 @@ def reads_loglikelihoods_base(sample_name, k, cutoff):
 				if count == 0:
 					like = 1.0 / max(kmer_totals)
 				else:
-					like = float(count) / kmer_totals[index]
+					like = float(count) / kmer_totals[genome_index]
 				reads_loglikes[read_index][genome_index] += np.log(like)
 
 	return reads_loglikes
 
 def reads_loglikelihoods(sample_name, k, cutoff=2):
-	return reads_loglikelihoods_base(sample_name, k, cutoff)
+	rll_filename = 'pickles/%s_rll_%d_%d.pickle' % (sample_name, k, cutoff)
+	if os.path.exists(rll_filename):
+		with open(rll_filename) as f:
+			rll = cPickle.load(f)
+	else:
+		rll = reads_loglikelihoods_base(sample_name, k, cutoff)
+		with open(rll_filename, 'w') as f:
+			cPickle.dump(rll, f)
+	return rll
 
-	
 def reservoir_sample(iterator, size):
     sample = []
     observed = 0

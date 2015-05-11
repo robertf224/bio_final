@@ -1,4 +1,4 @@
-import os, cPickle, random, heapq, sys
+import sys
 from utils import *
 import numpy as np
 import scipy.optimize as op
@@ -20,10 +20,16 @@ def predict_alphas_simple(sample_name, k, cutoff=2):
 	reads_loglikes = reads_loglikelihoods(sample_name, k, cutoff)
 
 	for read_loglikes in reads_loglikes:
-		read_map_counts[np.argmax(read_loglike)] += 1
+		read_map_counts[np.argmax(read_loglikes)] += 1
 
 	predicted_alphas = normalize_counts(read_map_counts)
 	return predicted_alphas
+
+def predict_alphas_maximization(sample_name, k, cutoff=2):
+	"""
+		Parameter maximization
+	"""
+	reads_loglikes = reads_loglikelihoods(sample_name, k, cutoff)
 
 
 

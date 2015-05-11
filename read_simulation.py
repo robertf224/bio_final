@@ -11,7 +11,8 @@ for genome_filename in os.listdir('genomes'):
 		    '-l', '150',
 		    '-f', '100',
 		    '-ss', 'MS',
-		    '-o',  'reads/'+genome_filename.replace('.fna','')
+		    '-o',  'reads/'+genome_filename.replace('.fna',''),
+		    '-na'
 	    ]
 	else:
 	    args = [
@@ -20,7 +21,8 @@ for genome_filename in os.listdir('genomes'):
 		    '-l', '150',
 		    '-f', '100',
 		    '-ss', 'MS',
-		    '-o',  'reads/'+genome_filename.replace('.fna','')
+		    '-o',  'reads/'+genome_filename.replace('.fna',''),
+		    '-na'
 	    ]
 
 	# ./art_bin_ChocolateCherryCake/art_illumina -i genomes/AE013218.fna  -l 150 -f 100 -ss MS -o test/AE013
