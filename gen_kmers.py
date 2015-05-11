@@ -3,7 +3,7 @@ from collections import defaultdict
 from utils import kmer_store, kmers, nucleotides_fna, progress
 
 """"
-	gen_kmers <k> sample <sample_filename>
+	gen_kmers <k> sample <sample name>
 
 		or
 
@@ -13,7 +13,8 @@ k = int(sys.argv[1])
 version = sys.argv[2]
 
 if version == 'sample':
-	filename = sys.argv[3]
+	sample_name = sys.argv[3]
+	filename = 'samples/%s.txt' % sample_name
 	sample_kmers = kmer_store()
 	with open(filename) as f:
 		for read in f:

@@ -7,10 +7,11 @@ from utils import reservoir_sample, reads_fq, progress
 		alphas: [a1, a2, ..., a20]
 	}
 """
-if len(sys.argv) != 3:
-	print 'usage: sample_simulation <json arguments filename> <output filename>'
-args_filename = sys.argv[1]
-output_filename = sys.argv[2]
+if len(sys.argv) != 2:
+	print 'usage: sample_simulation <sample name>'
+sample_name = sys.argv[1]
+args_filename = 'testcases/%s.json' % sample_name
+output_filename = 'samples/%s.txt' % sample_name
 
 with open(args_filename) as f:
 	args = json.load(f)

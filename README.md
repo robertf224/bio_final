@@ -9,7 +9,7 @@ python read_simulation.py
 
 To generate a sample from a sample definition json file (examples in testcases folder):
 ```bash
-python sample_simulation.py <sample definition file> <sample file>
+python sample_simulation.py <sample name>
 The samples are stored in the samples folder.
 
 
@@ -22,11 +22,11 @@ python gen_kmers.py <k> genomes
 
 To generate kmers for a sample:
 ```bash
-python gen_kmers.py <k> sample <sample file>
+python gen_kmers.py <k> sample <sample name>
 ```
 
 kmer spectra are stored as pickle files in the pickles folder.
 
 ## Computation
 
-Preliminary models in test_compute.py
+Preliminary models in compute.py
