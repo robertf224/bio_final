@@ -26,10 +26,14 @@ for read in progress(reads, length=num_reads):
 	# compute log-likelihoods for each genome for this read
 	lnlikes = [0.0]*20
 	for kmer in kmers(read, k):
-		counts = map(lambda x: 1 if x == 0 else x, kmer_spectra[kmer] if kmer in kmer_spectra else [0]*20)
-		for index, count in enumerate(counts):
-			lnlikes[index] += np.log(float(count) / kmer_totals[index])
-	
+		for index, count in enumerate(kmer_spectra[kmer] if kmer in kmer_spectra else [0]*20):
+			if count == 0:
+				# smoothing
+				like = 1.0 / max(kmer_totals)
+			else:
+				like = float(count) / kmer_totals[index]
+			lnlikes[index] += np.log(like)
+			
 	# map to best one
 	max_index = 0
 	for index, lnlike in enumerate(lnlikes):
