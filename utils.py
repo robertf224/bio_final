@@ -71,7 +71,7 @@ def normalize_counts(counts):
 	total = sum(counts)
 	return map(lambda x: x / float(total), counts)
 
-def reads_loglikelihoods_base(sample_name, k, cutoff):
+def reads_loglikelihoods_base(sample_name, k, cutoff, smoothing_function):
 	sample_kmers = load_sample_kmers(sample_name, k)
 	kmer_spectra = load_kmer_spectra(k)
 
@@ -83,7 +83,6 @@ def reads_loglikelihoods_base(sample_name, k, cutoff):
 
 	# denominators of likelihoods for individual kmers
 	kmer_totals = total_kmers_per_genome()
-	kmer_totals_sum = sum(total_kmers_per_genome())
 
 	# dummy array
 	dummy_array = [0]*20
@@ -99,17 +98,17 @@ def reads_loglikelihoods_base(sample_name, k, cutoff):
 
 		for kmer in frequent_kmers:
 			counts = kmer_spectra[kmer] if kmer in kmer_spectra else dummy_array
-			if counts != dummy_array:
+			if counts[0] != 0:
 				num_recognized += 1
 
 			for genome_index, count in enumerate(counts):
 				if count == 0:
-					like = 0.1 / kmer_totals_sum
+					like = smoothing_function(counts, genome_index)
 				else:
 					like = float(count) / kmer_totals[genome_index]
 				reads_loglikes[read_index][genome_index] += np.log(like)
 
-		print 'recognized: %d kmers recognized in read' % num_recognized
+		print 'recognized: %d kmers from Genome 1 recognized in read' % num_recognized
 
 	return reads_loglikes
 
@@ -125,14 +124,18 @@ def load_sample_kmers(sample_name, k):
 		sample_kmers = cPickle.load(f)
 	return sample_kmers
 
+kmer_totals_sum = sum(total_kmers_per_genome())
+simple_smoothing = lambda counts, genome_index: 1.0 / kmer_totals_sum
+def reads_loglikelihoods(sample_name, k, cutoff=2, smoothing_function=None):
+	version = 's' if smoothing_function == None else 'c'
+	if smoothing_function == None: smoothing_function = simple_smoothing
 
-def reads_loglikelihoods(sample_name, k, cutoff=2):
-	rll_filename = 'pickles/%s_rll_%d_%d.pickle' % (sample_name, k, cutoff)
+	rll_filename = 'pickles/%s_rll_%d_%d_%s.pickle' % (sample_name, k, cutoff, version)
 	if os.path.exists(rll_filename):
 		with open(rll_filename) as f:
 			rll = cPickle.load(f)
 	else:
-		rll = reads_loglikelihoods_base(sample_name, k, cutoff)
+		rll = reads_loglikelihoods_base(sample_name, k, cutoff, smoothing_function)
 		with open(rll_filename, 'w') as f:
 			cPickle.dump(rll, f)
 	return rll
