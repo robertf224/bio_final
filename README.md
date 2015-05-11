@@ -11,7 +11,7 @@ To generate a sample from a sample definition json file (examples in testcases f
 ```bash
 python sample_simulation.py <sample name>
 The samples are stored in the samples folder.
-
+```
 
 ## kmer generation
 
