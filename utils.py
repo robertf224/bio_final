@@ -1,6 +1,6 @@
 from pybloom import ScalableBloomFilter
 from collections import deque
-import random, sys
+import random, sys, os
 
 class kmer_store:
 	def __init__(self):
@@ -49,6 +49,22 @@ def reads_fq(filename):
 			if line.strip() == '+':
 				yield prev_line
 			prev_line = line.strip()
+
+def total_kmers_per_genome():
+	totals = [0]*20
+	if os.path.exists('pickles/totals.txt'):
+		with open('pickles/totals.txt') as f:
+			for index, line in enumerate(f):
+				if index == 20:
+					break
+				totals[index] = int(line.strip())
+		return totals
+	for index, genome_filename in enumerate(progress(filter(lambda x: x.endswith('.fna'), os.listdir('genomes')))):
+		totals[index] = sum(1 for kmer in kmers(nucleotides_fna('genomes/'+genome_filename), 5))
+	with open('pickles/totals.txt', 'w') as f:
+		for total in totals:
+			f.write('%d\n'%total)
+	return totals
 
 def reservoir_sample(iterator, size):
     sample = []
