@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt; plt.rcdefaults()
 import numpy as np
@@ -5,7 +7,7 @@ import matplotlib.pyplot as plt
 import sys
 
 usage = "python gen_alpha_plot.py <input file> <plot title> <x axis label> <y axis label>"
-if len(sys.argv) != 4:
+if len(sys.argv) != 5:
     print "Wrong number of arguments"
     print usage
     sys.exit(1)
