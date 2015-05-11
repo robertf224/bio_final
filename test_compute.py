@@ -3,7 +3,7 @@ from utils import kmer_store, kmers, nucleotides_fna, progress
 import numpy as np
 import scipy.optimize as op
 
-k = 12
+k = 5
 kmer_spectra_filename = 'pickles/kmer_spectra_%d.pickle' % k
 with open(kmer_spectra_filename) as f:
 	kmer_spectra = cPickle.load(f)
