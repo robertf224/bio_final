@@ -69,6 +69,14 @@ def total_kmers_per_genome():
 def normalize_counts(counts):
 	total = sum(counts)
 	return map(lambda x: x / float(total), counts)
+
+def memoize(f):
+    memo = {}
+    def helper(x):
+        if x not in memo:            
+            memo[x] = f(x)
+        return memo[x]
+    return helper
 	
 def reservoir_sample(iterator, size):
     sample = []

@@ -9,8 +9,7 @@ import scipy.optimize as op
 k = int(sys.argv[1])
 sample_name = sys.argv[2]
 
-
-
+@memoize
 def reads_loglikelihoods(sample_name, k, cutoff=2):
 	sample_filename = 'samples/%s.txt' % sample_name
 
@@ -48,23 +47,18 @@ def reads_loglikelihoods(sample_name, k, cutoff=2):
 	return reads_loglikes
 
 
-
 def predict_alphas_simple(sample_name, k, cutoff=2):
+	"""
+		Look at the log likelihoods for each read, map a read to the genome that maximizes its likelihood
+
+		Use proportions of read maps to estimate alphas
+	"""
 	read_map_counts = [0]*20
 	reads_loglikes = read_loglikelihoods(sample_name, k, cutoff)
 
 	for read_loglikes in reads_loglikes:
+		read_map_counts[np.argmax(read_loglike)] += 1
 
-
-	# map to best one
-	max_index = 0
-	for index, lnlike in enumerate(lnlikes):
-		if lnlikes[index] > lnlikes[max_index]:
-			max_index = index
-
-	read_map_counts[max_index] += 1
-
-	reads.close()
 	predicted_alphas = normalize_counts(read_map_counts)
 	return predicted_alphas
 
