@@ -2,7 +2,7 @@
 # sample name
 # smoothing function
 import subprocess 
-import os
+import os, sys
 
 def main(k, sample_name):
    # assume reads are present
