@@ -72,11 +72,52 @@ def normalize_counts(counts):
 
 def memoize(f):
     memo = {}
-    def helper(x):
-        if x not in memo:            
-            memo[x] = f(x)
-        return memo[x]
+    def helper(*args):
+        if args not in memo:            
+            memo[args] = f(args)
+        return memo[args]
     return helper
+
+@memoize
+def reads_loglikelihoods_base(sample_name, k, cutoff):
+	sample_filename = 'samples/%s.txt' % sample_name
+
+	kmer_spectra_filename = 'pickles/kmer_spectra_%d.pickle' % k
+	with open(kmer_spectra_filename) as f:
+		kmer_spectra = cPickle.load(f)
+
+	sample_kmers_filename = 'pickles/%s_kmers_%d.pickle' % (sys.argv[1], k)
+	with open(sample_kmers_filename) as f:
+		sample_kmers = cPickle.load(f)
+
+	# get num reads for progress updating
+	reads = open(sample_filename)
+	num_reads = sum(1 for line in reads)
+	reads.seek(0)
+
+	# denominators of likelihoods for individual kmers
+	kmer_totals = total_kmers_per_genome()
+
+	# what we will return
+	reads_loglikes = np.empty([num_reads, 20], dtype=float)
+
+	for read_index, read in enumerate(progress(reads, length=num_reads)):
+		# get the kmers from this read that are frequent kmers of this sample (and thus, probably not erroneous)
+		frequent_kmers = filter(lambda kmer: kmer in sample_kmers and sample_kmers[kmer] >= cutoff, kmers(read.strip(), k))
+
+		for kmer in frequent_kmers:
+			for genome_index, count in enumerate(kmer_spectra[kmer] if kmer in kmer_spectra else [0]*20):
+				if count == 0:
+					like = 1.0 / max(kmer_totals)
+				else:
+					like = float(count) / kmer_totals[index]
+				reads_loglikes[read_index][genome_index] += np.log(like)
+
+	return reads_loglikes
+
+def reads_loglikelihoods(sample_name, k, cutoff=2):
+	return reads_loglikelihoods_base(sample_name, k, cutoff)
+	
 	
 def reservoir_sample(iterator, size):
     sample = []
