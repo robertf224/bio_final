@@ -1,6 +1,6 @@
 from pybloom import ScalableBloomFilter
 from collections import deque
-import random, sys, os
+import random, sys, os, cPickle
 
 class kmer_store:
 	def __init__(self):
@@ -74,7 +74,7 @@ def memoize(f):
     memo = {}
     def helper(*args):
         if args not in memo:            
-            memo[args] = f(args)
+            memo[args] = f(*args)
         return memo[args]
     return helper
 
@@ -86,7 +86,7 @@ def reads_loglikelihoods_base(sample_name, k, cutoff):
 	with open(kmer_spectra_filename) as f:
 		kmer_spectra = cPickle.load(f)
 
-	sample_kmers_filename = 'pickles/%s_kmers_%d.pickle' % (sys.argv[1], k)
+	sample_kmers_filename = 'pickles/%s_kmers_%d.pickle' % (sample_name, k)
 	with open(sample_kmers_filename) as f:
 		sample_kmers = cPickle.load(f)
 
@@ -117,7 +117,7 @@ def reads_loglikelihoods_base(sample_name, k, cutoff):
 
 def reads_loglikelihoods(sample_name, k, cutoff=2):
 	return reads_loglikelihoods_base(sample_name, k, cutoff)
-	
+
 	
 def reservoir_sample(iterator, size):
     sample = []
