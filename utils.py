@@ -72,23 +72,21 @@ def normalize_counts(counts):
 	return map(lambda x: x / float(total), counts)
 
 def reads_loglikelihoods_base(sample_name, k, cutoff):
-	sample_filename = 'samples/%s.txt' % sample_name
-
-	kmer_spectra_filename = 'pickles/kmer_spectra_%d.pickle' % k
-	with open(kmer_spectra_filename) as f:
-		kmer_spectra = cPickle.load(f)
-
-	sample_kmers_filename = 'pickles/%s_kmers_%d.pickle' % (sample_name, k)
-	with open(sample_kmers_filename) as f:
-		sample_kmers = cPickle.load(f)
+	sample_kmers = load_sample_kmers(sample_name, k)
+	kmer_spectra = load_kmer_spectra(k)
 
 	# get num reads for progress updating
+	sample_filename = 'samples/%s.txt' % sample_name
 	reads = open(sample_filename)
 	num_reads = sum(1 for line in reads)
 	reads.seek(0)
 
 	# denominators of likelihoods for individual kmers
 	kmer_totals = total_kmers_per_genome()
+	kmer_totals_sum = sum(total_kmers_per_genome())
+
+	# dummy array
+	dummy_array = [0]*20
 
 	# what we will return
 	reads_loglikes = np.empty([num_reads, 20], dtype=float)
@@ -97,15 +95,36 @@ def reads_loglikelihoods_base(sample_name, k, cutoff):
 		# get the kmers from this read that are frequent kmers of this sample (and thus, probably not erroneous)
 		frequent_kmers = filter(lambda kmer: kmer in sample_kmers and sample_kmers[kmer] >= cutoff, kmers(read.strip(), k))
 
+		num_recognized = 0
+
 		for kmer in frequent_kmers:
-			for genome_index, count in enumerate(kmer_spectra[kmer] if kmer in kmer_spectra else [0]*20):
+			counts = kmer_spectra[kmer] if kmer in kmer_spectra else dummy_array
+			if counts != dummy_array:
+				num_recognized += 1
+
+			for genome_index, count in enumerate(counts):
 				if count == 0:
-					like = 1.0 / max(kmer_totals)
+					like = 0.1 / kmer_totals_sum
 				else:
 					like = float(count) / kmer_totals[genome_index]
 				reads_loglikes[read_index][genome_index] += np.log(like)
 
+		print 'recognized: %d kmers recognized in read' % num_recognized
+
 	return reads_loglikes
+
+def load_kmer_spectra(k):
+	kmer_spectra_filename = 'pickles/kmer_spectra_%d.pickle' % k
+	with open(kmer_spectra_filename) as f:
+		kmer_spectra = cPickle.load(f)
+	return kmer_spectra
+
+def load_sample_kmers(sample_name, k):
+	sample_kmers_filename = 'pickles/%s_kmers_%d.pickle' % (sample_name, k)
+	with open(sample_kmers_filename) as f:
+		sample_kmers = cPickle.load(f)
+	return sample_kmers
+
 
 def reads_loglikelihoods(sample_name, k, cutoff=2):
 	rll_filename = 'pickles/%s_rll_%d_%d.pickle' % (sample_name, k, cutoff)

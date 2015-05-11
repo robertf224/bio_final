@@ -25,6 +25,8 @@ def predict_alphas_simple(sample_name, k, cutoff=2):
 	predicted_alphas = normalize_counts(read_map_counts)
 	return predicted_alphas
 
+# def total_likelihood(reads_loglikes, alphas)
+
 def predict_alphas_maximization(sample_name, k, cutoff=2):
 	"""
 		Parameter maximization
