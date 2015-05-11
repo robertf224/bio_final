@@ -1,6 +1,7 @@
 **/*.fq
 **/*.pickle
 **/*.aln
-**/*.txt
+notes.txt
+samples/*.txt
 **/.DS_Store
 **/*.pyc
