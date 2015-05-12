@@ -7,7 +7,7 @@ from utils import kmer_store, kmers, nucleotides_fna, progress
 
 		or
 
-	gen_kmers <k> genomes
+	gen_kmers <k> genomes <opt:full>
 """
 k = int(sys.argv[1])
 version = sys.argv[2]
@@ -27,14 +27,19 @@ if version == 'sample':
 		cPickle.dump(sample_kmers.kmers, f)
 
 elif version =='genomes':
+	full = True if (len(sys.argv) == 4 and sys.argv[3] == 'full') else False
 	kmer_spectra = defaultdict(lambda:[0]*20)
 	for index, genome_filename in enumerate(progress(filter(lambda x: x.endswith('.fna'), os.listdir('genomes')))):
-		kmer_spectrum = kmer_store()
+		kmer_spectrum = {} if full else kmer_store()
 		for kmer in kmers(nucleotides_fna('genomes/'+genome_filename), k):
-			kmer_spectrum.update(kmer)
+			if full:
+				kmer_spectrum[kmer] = kmer_spectrum[kmer]+1 if kmer in kmer_spectrum else 1
+			else:
+				kmer_spectrum.update(kmer)
 		for kmer in kmer_spectrum:
 			kmer_spectra[kmer][index] = kmer_spectrum[kmer]
 
-	with open('pickles/kmer_spectra_%d.pickle' % k, 'w') as f:
+	full_string = 'full_' if full else ''
+	with open('pickles/%skmer_spectra_%d.pickle' % (full_string, k), 'w') as f:
 		cPickle.dump(dict(kmer_spectra), f)
 
