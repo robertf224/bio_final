@@ -1,7 +1,7 @@
-import sys
+import sys, json
 from utils import *
 import numpy as np
-import scipy.optimize as op
+from gen_alpha_plot import make_bar_plot
 
 """
 	usage: compute <k> <sample name>
@@ -9,8 +9,7 @@ import scipy.optimize as op
 k = int(sys.argv[1])
 sample_name = sys.argv[2]
 
-
-def predict_alphas_simple(sample_name, k, full=False, cutoff=2, smoothing_function=None):
+def predict_alphas_likelihood(sample_name, k, full=False, cutoff=2, smoothing_function=None):
 	"""
 		Look at the log likelihoods for each read, map a read to the genome that maximizes its likelihood
 
@@ -25,17 +24,53 @@ def predict_alphas_simple(sample_name, k, full=False, cutoff=2, smoothing_functi
 	predicted_alphas = normalize_counts(read_map_counts)
 	return predicted_alphas
 
-# def total_likelihood(reads_loglikes, alphas)
-
-def predict_alphas_maximization(sample_name, k, cutoff=2):
+def predict_alphas_expectation(sample_name, k):
 	"""
-		Parameter maximization
+		Predict alphas using # unique k-mers observed as an estimator of E(# unique k-mers from G_i)
 	"""
-	reads_loglikes = reads_loglikelihoods(sample_name, k, cutoff)
+	sample_filename = 'samples/%s.txt' % sample_name
+	reads = open(sample_filename)
+	num_reads = sum(1 for line in reads)
+	reads.seek(0)
 
-print 'simple smoothing:'
-print predict_alphas_simple(sample_name, k, full=True)
+	kmer_spectra = load_kmer_spectra(k)
+	genome_sizes = total_kmers_per_genome()
 
-"""harsher_smoothing = lambda counts, genome_index: 0.001 / kmer_totals_sum
-print 'custom harsher smoothing':
-print predict_alphas_simplle"""
+	# calling uniques k-mers that appear only in one genome, and appear at least 4 times in that genome
+	uniques = set(filter(lambda kmer: len(filter(bool, kmer_spectra[kmer])) == 1 and sum(kmer_spectra[kmer]) >= 4, kmer_spectra))
+	unique_counts = [0]*20
+	for kmer in uniques:
+		index = np.argmax(kmer_spectra[kmer])
+		unique_counts[index] += kmer_spectra[kmer][index]
+
+	unique_frequencies = [0]*20
+	for read in progress(reads, length=num_reads):
+		for kmer in kmers(read.strip(), k):
+			if kmer in uniques:
+				index = np.argmax(kmer_spectra[kmer])
+				unique_frequencies[index] += 1
+	reads.close()
+
+	for index, count in enumerate(unique_frequencies):
+		unique_frequencies[index] /= (unique_counts[index] / float(genome_sizes[index]))
+		# unique_frequencies[index] /= 100000*(150-k+1) # theoretically what we're doing
+
+	return normalize_counts(unique_frequencies)
+
+# output
+predicted_alphas = predict_alphas_expectation(sample_name, k)
+print 'predicted alpha distribution:' 
+print predicted_alphas
+print ''
+
+with open('testcases/%s.json' % sample_name) as f:
+	expected_alphas = json.load(f)['alphas']
+print 'expected alpha distribution:'
+print expected_alphas
+print ''
+
+plot_filename = 'plots/%s_%d.png' % (sample_name, k)
+chart_title = '%s, k=%d' % (sample_name, k)
+make_bar_plot(expected_alphas, predicted_alphas, chart_title, plot_filename)
+print 'plot saved to %s' % plot_filename
+

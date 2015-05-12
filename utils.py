@@ -135,15 +135,6 @@ simple_smoothing = lambda counts, genome_index: 1.0 / kmer_totals_sum
 def reads_loglikelihoods(sample_name, k, full=False, cutoff=2, smoothing_function=None):
 	version = 's' if smoothing_function == None else 'c'
 	if smoothing_function == None: smoothing_function = simple_smoothing
-
-	"""rll_filename = 'pickles/%s_rll_%d_%d_%s.pickle' % (sample_name, k, cutoff, version)
-	if os.path.exists(rll_filename):
-		with open(rll_filename) as f:
-			rll = cPickle.load(f)
-	else:
-		rll = reads_loglikelihoods_base(sample_name, k, full, cutoff, smoothing_function)
-		with open(rll_filename, 'w') as f:
-			cPickle.dump(rll, f)"""
 	rll = reads_loglikelihoods_base(sample_name, k, full, cutoff, smoothing_function)
 	return rll
 

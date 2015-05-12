@@ -63,19 +63,28 @@ python compute.py <k> <sample name>
 
 - Follow the `kmer generation` instructions above, specifically the second one: `python gen_kmers.py <k> genomes`
 
-> Devise and implement a probabilistic model which assigns a likelihood to a species being
-> present given the k-mer frequency spectrum Fk(S). Evaluate how well you can identify presence
-> of organisms, both when exactly one or more than one species are present.
-
-> Devise a strategy which improves running time of the analysis and/or performance based on the
-> observation that there are k-mers which appear in multiple genomes.
-
 > Propose and implement a model for estimating the relative proportions α1, . . . , αk. Evaluate
 > how well you can recover the true proportion in your simulated data set.
 
-- Follow all of the above instructions: `sample generation`, `kmer generation`, and then lastly `Computation`. Running `compute.py` will yield alpha values
+We're using the observed number of unique k-mers from a specific genome in a sample as an estimator for the expected number of unique k-mers from that genome in the sample given its alpha value.  Specifically, the expected number of uniques from a specific genome is:
+
+![](http://i.imgur.com/IBlQu67.png?1)
+
+The number of unique kmers for a genome should approach this expectation as the sample size increases, so we can use it as an estimator, rearrange the terms, and compute alpha values for every genome, normalizing at the end.
+
+Deciding what are considered unique k-mers is a bit of a heuristic (we chose to consider those k-mers that appear in only one genome, and at least 4 times in that genome.  we also found that k=15 works well), but the model itself has an actual probabilistic motivation, and works fairly well.  Here is an example, generated from S3 in the testcases directory using k=15:
+
+![S3, k=15](http://i.imgur.com/tGhoOSw.png?1)
+
+We also have another method implemented that computes the likelihood of a read coming from a specific genome based on making draws from the k-mer spectrum, and maps that read to the genome that maximizes the likelihood.  The proportions are then estimated by the proportions of reads mapping to different genomes.  This works to some extent, but unfortunately it requires smoothing and is thus difficult to tune.
+
+- Follow all of the above instructions: `sample generation`, `kmer generation`, and then lastly `Computation`. Running `compute.py <k> <sample name>` will yield alpha values and a plot
 
 > Propose a method for deciding when novel species are likely to be present in a sample.
 
+We can easily work novel species detection into our existing framework.  We can essentially add another alpha value to represent the proportion of novel species, and use the number of unrecognized unique kmers in the sample as our estimator for the expected number of unique kmers from novel species in the sample.
+
 > Describe which information is required or which assumptions are necessary to model the problem
 > of estimating the number of novel genomes present.
+
+In general, we would need some information regarding the k-mer content of the novel genomes relative to each other.

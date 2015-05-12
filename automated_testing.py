@@ -1,1 +1,0 @@
-from compute import predict_alphas_simple

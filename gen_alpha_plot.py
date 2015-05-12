@@ -8,7 +8,7 @@ from matplotlib.ticker import FuncFormatter
 import sys
 
 
-def make_bar_plot(expected, computed, plot_title, x_axis_label, y_axis_label):
+def make_bar_plot(expected, computed, plot_title, filename, x_axis_label='genomes', y_axis_label='alphas'):
     """
 	takes two arrays of same size
     """
@@ -18,7 +18,6 @@ def make_bar_plot(expected, computed, plot_title, x_axis_label, y_axis_label):
 
 
     genomes = ["G"+str(i) for i in xrange(len(expected))]
-    pdf = PdfPages('%s_plot.pdf' % plot_title)
 
     # Example data
     x_pos = np.arange(len(genomes))
@@ -28,8 +27,8 @@ def make_bar_plot(expected, computed, plot_title, x_axis_label, y_axis_label):
     plt.ylabel(y_axis_label)
     plt.xlabel(x_axis_label)
     plt.title(plot_title)
-    pdf.savefig()
-    pdf.close()
+    plt.savefig(filename)
+    plt.clf()
 
 def make_histogram(expected, computed, plot_title, x_axis_label, y_axis_label):
     def to_percent(y, position):
