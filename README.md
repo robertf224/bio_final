@@ -87,4 +87,4 @@ We can easily work novel species detection into our existing framework.  We can 
 > Describe which information is required or which assumptions are necessary to model the problem
 > of estimating the number of novel genomes present.
 
-In general, we would need some information regarding the k-mer content of the novel genomes relative to each other.
+In general, we would need some information regarding the disjoint k-mer content of the novel genomes relative to the original taxa and to each other (i.e. how many unique k-mers we should expect from each, how many common k-mers we should expect from each)
