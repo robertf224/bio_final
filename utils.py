@@ -71,9 +71,9 @@ def normalize_counts(counts):
 	total = sum(counts)
 	return map(lambda x: x / float(total), counts)
 
-def reads_loglikelihoods_base(sample_name, k, cutoff, smoothing_function):
+def reads_loglikelihoods_base(sample_name, k, full, cutoff, smoothing_function):
 	sample_kmers = load_sample_kmers(sample_name, k)
-	kmer_spectra = load_kmer_spectra(k)
+	kmer_spectra = load_kmer_spectra(k, full)
 
 	# get num reads for progress updating
 	sample_filename = 'samples/%s.txt' % sample_name
@@ -86,6 +86,8 @@ def reads_loglikelihoods_base(sample_name, k, cutoff, smoothing_function):
 
 	# dummy array
 	dummy_array = [0]*20
+	total_recognized = 0
+	total_seen = 0
 
 	# what we will return
 	reads_loglikes = np.empty([num_reads, 20], dtype=float)
@@ -95,6 +97,7 @@ def reads_loglikelihoods_base(sample_name, k, cutoff, smoothing_function):
 		frequent_kmers = filter(lambda kmer: kmer in sample_kmers and sample_kmers[kmer] >= cutoff, kmers(read.strip(), k))
 
 		num_recognized = 0
+		total_seen += len(frequent_kmers)
 
 		for kmer in frequent_kmers:
 			counts = kmer_spectra[kmer] if kmer in kmer_spectra else dummy_array
@@ -108,12 +111,15 @@ def reads_loglikelihoods_base(sample_name, k, cutoff, smoothing_function):
 					like = float(count) / kmer_totals[genome_index]
 				reads_loglikes[read_index][genome_index] += np.log(like)
 
-		print 'recognized: %d kmers from Genome 1 recognized in read' % num_recognized
+		total_recognized += num_recognized
+
+	print 'avg recognized per read: %f' % (float(total_recognized) / total_seen)
 
 	return reads_loglikes
 
-def load_kmer_spectra(k):
-	kmer_spectra_filename = 'pickles/kmer_spectra_%d.pickle' % k
+def load_kmer_spectra(k, full=False):
+	full_string = 'full_' if full else ''
+	kmer_spectra_filename = 'pickles/%skmer_spectra_%d.pickle' % (full_string, k)
 	with open(kmer_spectra_filename) as f:
 		kmer_spectra = cPickle.load(f)
 	return kmer_spectra
@@ -126,18 +132,19 @@ def load_sample_kmers(sample_name, k):
 
 kmer_totals_sum = sum(total_kmers_per_genome())
 simple_smoothing = lambda counts, genome_index: 1.0 / kmer_totals_sum
-def reads_loglikelihoods(sample_name, k, cutoff=2, smoothing_function=None):
+def reads_loglikelihoods(sample_name, k, full=False, cutoff=2, smoothing_function=None):
 	version = 's' if smoothing_function == None else 'c'
 	if smoothing_function == None: smoothing_function = simple_smoothing
 
-	rll_filename = 'pickles/%s_rll_%d_%d_%s.pickle' % (sample_name, k, cutoff, version)
+	"""rll_filename = 'pickles/%s_rll_%d_%d_%s.pickle' % (sample_name, k, cutoff, version)
 	if os.path.exists(rll_filename):
 		with open(rll_filename) as f:
 			rll = cPickle.load(f)
 	else:
-		rll = reads_loglikelihoods_base(sample_name, k, cutoff, smoothing_function)
+		rll = reads_loglikelihoods_base(sample_name, k, full, cutoff, smoothing_function)
 		with open(rll_filename, 'w') as f:
-			cPickle.dump(rll, f)
+			cPickle.dump(rll, f)"""
+	rll = reads_loglikelihoods_base(sample_name, k, full, cutoff, smoothing_function)
 	return rll
 
 def reservoir_sample(iterator, size):
