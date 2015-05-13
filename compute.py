@@ -1,13 +1,12 @@
 import sys, json
 from utils import *
 import numpy as np
+import scipy.optimize as op
 from gen_alpha_plot import make_bar_plot
 
 """
 	usage: compute <k> <sample name>
 """
-k = int(sys.argv[1])
-sample_name = sys.argv[2]
 
 def predict_alphas_likelihood(sample_name, k, full=False, cutoff=2, smoothing_function=None):
 	"""
@@ -24,7 +23,35 @@ def predict_alphas_likelihood(sample_name, k, full=False, cutoff=2, smoothing_fu
 	predicted_alphas = normalize_counts(read_map_counts)
 	return predicted_alphas
 
-def predict_alphas_expectation(sample_name, k):
+def predict_alphas_sum_of_squares(sample_name, k):
+	"""
+		Compute alphas by minimizing sum of squared differences for each kmer of expected versus observed
+	"""
+	N = 100000
+	L = 150
+	kmer_spectra = load_kmer_spectra(k)
+	sample_kmers = load_sample_kmers(sample_name, k)
+	sizes = total_kmers_per_genome()
+
+	def sum_squared_differences(alphas):
+		"""
+			Compute sum of squared differences between predicted # kmers and found for recognized kmers
+		"""
+		alphas = normalize_counts(alphas)
+		total_sum_squared_diff = 0.0
+		for kmer in sample_kmers:
+			if kmer in kmer_spectra:
+				counts = kmer_spectra[kmer]
+				total_sum_squared_diff += (sum(N*(L-k+1)*alphas[i]*(float(counts[i])/sizes[i]) for i in xrange(20)) - sample_kmers[kmer])**2
+		return total_sum_squared_diff
+
+	bounds = [(0, None) for i in xrange(20)]
+	objective = lambda alphas: sum_squared_differences(alphas)
+	priors = [0.05]*20
+	prediction = op.minimize(objective, priors, bounds=bounds)
+	return normalize_counts(prediction['x'])
+
+def predict_alphas_uniques_expectation(sample_name, k):
 	"""
 		Predict alphas using # unique k-mers observed as an estimator of E(# unique k-mers from G_i)
 	"""
@@ -57,20 +84,30 @@ def predict_alphas_expectation(sample_name, k):
 
 	return normalize_counts(unique_frequencies)
 
-# output
-predicted_alphas = predict_alphas_expectation(sample_name, k)
-print 'predicted alpha distribution:' 
-print predicted_alphas
-print ''
+if __name__ == '__main__':
+	k = int(sys.argv[1])
+	sample_name = sys.argv[2]
+	version = sys.argv[3]
+	method = {
+		'l': predict_alphas_likelihood,
+		's': predict_alphas_sum_of_squares,
+		'u': predict_alphas_uniques_expectation
+	}[version]
 
-with open('testcases/%s.json' % sample_name) as f:
-	expected_alphas = json.load(f)['alphas']
-print 'expected alpha distribution:'
-print expected_alphas
-print ''
+	# output
+	predicted_alphas = method(sample_name, k)
+	print 'predicted alpha distribution:' 
+	print predicted_alphas
+	print ''
 
-plot_filename = 'plots/%s_%d.png' % (sample_name, k)
-chart_title = '%s, k=%d' % (sample_name, k)
-make_bar_plot(expected_alphas, predicted_alphas, chart_title, plot_filename)
-print 'plot saved to %s' % plot_filename
+	with open('testcases/%s.json' % sample_name) as f:
+		expected_alphas = json.load(f)['alphas']
+	print 'expected alpha distribution:'
+	print expected_alphas
+	print ''
+
+	plot_filename = 'plots/%s_%d_%s.png' % (sample_name, k, version)
+	chart_title = '%s, k=%d, method=%s' % (sample_name, k, version)
+	make_bar_plot(expected_alphas, predicted_alphas, chart_title, plot_filename)
+	print 'plot saved to %s' % plot_filename
 

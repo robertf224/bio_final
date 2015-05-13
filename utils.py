@@ -101,7 +101,7 @@ def reads_loglikelihoods_base(sample_name, k, full, cutoff, smoothing_function):
 
 		for kmer in frequent_kmers:
 			counts = kmer_spectra[kmer] if kmer in kmer_spectra else dummy_array
-			if counts[0] != 0:
+			if  kmer in kmer_spectra:
 				num_recognized += 1
 
 			for genome_index, count in enumerate(counts):
