@@ -17,7 +17,7 @@ def main(k, sample_name):
 
     subprocess.call(['python', 'compute.py', str(k), sample_name, 's'])
 
-    subprocess.call('python', 'compute.py', str(k), sample_name, 'u'])
+    subprocess.call(['python', 'compute.py', str(k), sample_name, 'u'])
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
