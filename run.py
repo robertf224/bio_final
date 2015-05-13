@@ -15,6 +15,10 @@ def main(k, sample_name):
     if not os.path.exists("pickles/%s_kmers_%d.pickle"%(sample_name, k)):
 	subprocess.call(["python", "gen_kmers.py", str(k), "sample", sample_name])
 
+    subprocess.call(['python', 'compute.py', str(k), sample_name, 's'])
+
+    subprocess.call('python', 'compute.py', str(k), sample_name, 'u'])
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
 	print "python run.py <k> <sample name>"

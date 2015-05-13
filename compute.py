@@ -5,7 +5,7 @@ import scipy.optimize as op
 from gen_alpha_plot import make_bar_plot
 
 """
-	usage: compute <k> <sample name>
+	usage: compute <k> <sample name> <version: [l, s, u]>
 """
 
 def predict_alphas_likelihood(sample_name, k, full=False, cutoff=2, smoothing_function=None):

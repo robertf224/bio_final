@@ -31,8 +31,11 @@ kmer spectra are stored as pickle files in the pickles folder.
 
 ### Computation
 ```bash
-python compute.py <k> <sample name>
+python compute.py <k> <sample name> <version: [l, s, u]>
 ```
+
+version refers to model version (likelihood read mapping, sum of squares minimization, uniques expectation)
+
 ***
 
 ## Writeup
@@ -77,6 +80,8 @@ Deciding what are considered unique k-mers is a bit of a heuristic (we chose to 
 ![S3, k=15](http://i.imgur.com/tGhoOSw.png?1)
 
 We also have another method implemented that computes the likelihood of a read coming from a specific genome based on making draws from the k-mer spectrum, and maps that read to the genome that maximizes the likelihood.  The proportions are then estimated by the proportions of reads mapping to different genomes.  This works to some extent, but unfortunately it requires smoothing and is thus difficult to tune.
+
+We also have *another* method implemented that minimizes the sum of squared differences between the expected number of times we expected to see a specific k-mer and how many times we actually did.  This works comparably to the uniques expectation approach in performance.
 
 - Follow all of the above instructions: `sample generation`, `kmer generation`, and then lastly `Computation`. Running `compute.py <k> <sample name>` will yield alpha values and a plot
 
